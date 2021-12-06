@@ -51,75 +51,76 @@ class _MyAppState extends State<MyApp> {
                   ],
                 ),
               ),
-              Positioned(
-                top: 20,
-                right: 20,
-                child: TextButton(
-                  child: Text('loadFile $roationValue'),
-                  onPressed: () async {
-                    viewer3dCtl.loadFile('assets/T-shirt_3dmodel.obj');
-                  },
-                ),
-              ),
-              Positioned(
-                bottom: 20,
-                left: 20,
-                right: 20,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Slider(
-                      min: -360,
-                      max: 360,
-                      value: camPos.x,
-                      label: 'Cam x',
-                      onChanged: (double value) {
-                        setState(() {
-                          camPos.x = value;
-                        });
-                        viewer3dCtl.moveCam(camPos);
-                      },
-                    ),
-                    Slider(
-                      min: -360,
-                      max: 360,
-                      value: camPos.y,
-                      label: 'Cam y',
-                      onChanged: (double value) {
-                        setState(() {
-                          camPos.y = value;
-                        });
-                        viewer3dCtl.moveCam(camPos);
-                      },
-                    ),
-                    Slider(
-                      min: -360,
-                      max: 360,
-                      value: camPos.z,
-                      label: 'Cam z',
-                      onChanged: (double value) {
-                        setState(() {
-                          camPos.z = value;
-                        });
-                        debugPrint('${camPos.z}');
-                        viewer3dCtl.moveCam(camPos);
-                      },
-                    ),
-                    Slider(
-                      min: -360,
-                      max: 360,
-                      value: roationValue,
-                      label: 'object y rote',
-                      onChanged: (double value) {
-                        setState(() {
-                          roationValue = value;
-                        });
-                        viewer3dCtl.rotate(Vector3(0, value, 0));
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              // Positioned(
+              //   top: 20,
+              //   right: 20,
+              //   child: TextButton(
+              //     child: Text('loadFile $roationValue'),
+              //     onPressed: () async {
+              //       viewer3dCtl.loadFile('assets/T-shirt_3dmodel.obj');
+              //     },
+              //   ),
+              // ),
+
+              // Positioned(
+              //   bottom: 20,
+              //   left: 20,
+              //   right: 20,
+              //   child: Column(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       Slider(
+              //         min: -360,
+              //         max: 360,
+              //         value: camPos.x,
+              //         label: 'Cam x',
+              //         onChanged: (double value) {
+              //           setState(() {
+              //             camPos.x = value;
+              //           });
+              //           viewer3dCtl.moveCam(camPos);
+              //         },
+              //       ),
+              //       Slider(
+              //         min: -360,
+              //         max: 360,
+              //         value: camPos.y,
+              //         label: 'Cam y',
+              //         onChanged: (double value) {
+              //           setState(() {
+              //             camPos.y = value;
+              //           });
+              //           viewer3dCtl.moveCam(camPos);
+              //         },
+              //       ),
+              //       Slider(
+              //         min: -360,
+              //         max: 360,
+              //         value: camPos.z,
+              //         label: 'Cam z',
+              //         onChanged: (double value) {
+              //           setState(() {
+              //             camPos.z = value;
+              //           });
+              //           debugPrint('${camPos.z}');
+              //           viewer3dCtl.moveCam(camPos);
+              //         },
+              //       ),
+              //       Slider(
+              //         min: -360,
+              //         max: 360,
+              //         value: roationValue,
+              //         label: 'object y rote',
+              //         onChanged: (double value) {
+              //           setState(() {
+              //             roationValue = value;
+              //           });
+              //           viewer3dCtl.rotate(Vector3(0, value, 0));
+              //         },
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           )),
     );
