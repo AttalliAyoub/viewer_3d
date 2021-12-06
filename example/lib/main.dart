@@ -1,3 +1,4 @@
+import 'package:download_assets/download_assets.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:viewer_3d/viewer_3d.dart';
@@ -16,8 +17,60 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  double roationValue = 0.0;
+  final downloadAssetsController = DownloadAssetsController();
 
+  Future _refresh() async {
+    await downloadAssetsController.clearAssets();
+    await _downloadAssets();
+  }
+
+  void _showMessage({
+    required String message,
+    String label = 'OK',
+    VoidCallback? onPressed,
+  }) {
+    onPressed ??= () {};
+    try {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    } catch (err) {
+      debugPrint('$err');
+    }
+    final snackBar = SnackBar(
+      content: Text(message),
+      action: SnackBarAction(label: label, onPressed: onPressed),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future _downloadAssets() async {
+    final assetsDownloaded =
+        await downloadAssetsController.assetsDirAlreadyExists();
+    if (assetsDownloaded) {
+      _showMessage(message: 'your assets is Downloaded');
+      return;
+    }
+    try {
+      await downloadAssetsController.startDownload(
+          assetsUrl:
+              "https://github.com/edjostenes/download_assets/raw/master/assets.zip",
+          onProgress: (progressValue) {
+            _showMessage(
+                message: "Downloading - ${progressValue.toStringAsFixed(2)}");
+          },
+          onComplete: () {
+            _showMessage(
+                message:
+                    "Download completed\nClick in refresh button to force download");
+          },
+          onError: (exception) {
+            _showMessage(message: "Error: ${exception.toString()}");
+          });
+    } on DownloadAssetsException catch (e) {
+      _showMessage(message: e.toString());
+    }
+  }
+
+  double roationValue = 0.0;
   Vector3 camPos = Vector3.zero();
   late Viewer3DController viewer3dCtl;
 
@@ -36,6 +89,7 @@ class _MyAppState extends State<MyApp> {
                   viewer3dCtl = ctl;
                 },
               ),
+              /*
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -51,76 +105,77 @@ class _MyAppState extends State<MyApp> {
                   ],
                 ),
               ),
-              // Positioned(
-              //   top: 20,
-              //   right: 20,
-              //   child: TextButton(
-              //     child: Text('loadFile $roationValue'),
-              //     onPressed: () async {
-              //       viewer3dCtl.loadFile('assets/T-shirt_3dmodel.obj');
-              //     },
-              //   ),
-              // ),
+              Positioned(
+                top: 20,
+                right: 20,
+                child: TextButton(
+                  child: Text('loadFile $roationValue'),
+                  onPressed: () async {
+                    viewer3dCtl.loadFile('assets/T-shirt_3dmodel.obj');
+                  },
+                ),
+              ),
 
-              // Positioned(
-              //   bottom: 20,
-              //   left: 20,
-              //   right: 20,
-              //   child: Column(
-              //     mainAxisSize: MainAxisSize.min,
-              //     children: [
-              //       Slider(
-              //         min: -360,
-              //         max: 360,
-              //         value: camPos.x,
-              //         label: 'Cam x',
-              //         onChanged: (double value) {
-              //           setState(() {
-              //             camPos.x = value;
-              //           });
-              //           viewer3dCtl.moveCam(camPos);
-              //         },
-              //       ),
-              //       Slider(
-              //         min: -360,
-              //         max: 360,
-              //         value: camPos.y,
-              //         label: 'Cam y',
-              //         onChanged: (double value) {
-              //           setState(() {
-              //             camPos.y = value;
-              //           });
-              //           viewer3dCtl.moveCam(camPos);
-              //         },
-              //       ),
-              //       Slider(
-              //         min: -360,
-              //         max: 360,
-              //         value: camPos.z,
-              //         label: 'Cam z',
-              //         onChanged: (double value) {
-              //           setState(() {
-              //             camPos.z = value;
-              //           });
-              //           debugPrint('${camPos.z}');
-              //           viewer3dCtl.moveCam(camPos);
-              //         },
-              //       ),
-              //       Slider(
-              //         min: -360,
-              //         max: 360,
-              //         value: roationValue,
-              //         label: 'object y rote',
-              //         onChanged: (double value) {
-              //           setState(() {
-              //             roationValue = value;
-              //           });
-              //           viewer3dCtl.rotate(Vector3(0, value, 0));
-              //         },
-              //       ),
-              //     ],
-              //   ),
-              // ),
+              Positioned(
+                bottom: 20,
+                left: 20,
+                right: 20,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Slider(
+                      min: -360,
+                      max: 360,
+                      value: camPos.x,
+                      label: 'Cam x',
+                      onChanged: (double value) {
+                        setState(() {
+                          camPos.x = value;
+                        });
+                        viewer3dCtl.moveCam(camPos);
+                      },
+                    ),
+                    Slider(
+                      min: -360,
+                      max: 360,
+                      value: camPos.y,
+                      label: 'Cam y',
+                      onChanged: (double value) {
+                        setState(() {
+                          camPos.y = value;
+                        });
+                        viewer3dCtl.moveCam(camPos);
+                      },
+                    ),
+                    Slider(
+                      min: -360,
+                      max: 360,
+                      value: camPos.z,
+                      label: 'Cam z',
+                      onChanged: (double value) {
+                        setState(() {
+                          camPos.z = value;
+                        });
+                        debugPrint('${camPos.z}');
+                        viewer3dCtl.moveCam(camPos);
+                      },
+                    ),
+                    Slider(
+                      min: -360,
+                      max: 360,
+                      value: roationValue,
+                      label: 'object y rote',
+                      onChanged: (double value) {
+                        setState(() {
+                          roationValue = value;
+                        });
+                        viewer3dCtl.rotate(Vector3(0, value, 0));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              */
             ],
           )),
     );
