@@ -19,6 +19,7 @@ class _MyAppState extends State<MyApp> {
   double roationValue = 0.0;
 
   Vector3 camPos = Vector3.zero();
+  late Viewer3DController viewer3dCtl;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,11 @@ class _MyAppState extends State<MyApp> {
           ),
           body: Stack(
             children: [
-              const Viewer(),
+              Viewer3D(
+                onViewCreated: (ctl) {
+                  viewer3dCtl = ctl;
+                },
+              ),
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -52,7 +57,7 @@ class _MyAppState extends State<MyApp> {
                 child: TextButton(
                   child: Text('loadFile $roationValue'),
                   onPressed: () async {
-                    Viewer3d.loadFile('assets/T-shirt_3dmodel.obj');
+                    viewer3dCtl.loadFile('assets/T-shirt_3dmodel.obj');
                   },
                 ),
               ),
@@ -72,7 +77,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           camPos.x = value;
                         });
-                        Viewer3d.moveCam(camPos);
+                        viewer3dCtl.moveCam(camPos);
                       },
                     ),
                     Slider(
@@ -84,7 +89,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           camPos.y = value;
                         });
-                        Viewer3d.moveCam(camPos);
+                        viewer3dCtl.moveCam(camPos);
                       },
                     ),
                     Slider(
@@ -97,7 +102,7 @@ class _MyAppState extends State<MyApp> {
                           camPos.z = value;
                         });
                         debugPrint('${camPos.z}');
-                        Viewer3d.moveCam(camPos);
+                        viewer3dCtl.moveCam(camPos);
                       },
                     ),
                     Slider(
@@ -109,7 +114,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {
                           roationValue = value;
                         });
-                        Viewer3d.rotate(Vector3(0, value, 0));
+                        viewer3dCtl.rotate(Vector3(0, value, 0));
                       },
                     ),
                   ],
