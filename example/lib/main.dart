@@ -1,12 +1,19 @@
-import 'package:download_assets/download_assets.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path/path.dart' as path;
 import 'dart:math' as math;
 import 'package:viewer_3d/viewer_3d.dart';
-
 import 'package:vector_math/vector_math.dart' show Vector3;
+import 'package:viewer_3d_example/donload.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -17,11 +24,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final downloadAssetsController = DownloadAssetsController();
-
-  Future _refresh() async {
-    await downloadAssetsController.clearAssets();
-    await _downloadAssets();
+  @override
+  void initState() {
+    super.initState();
+    download();
   }
 
   void _showMessage({
@@ -30,11 +36,6 @@ class _MyAppState extends State<MyApp> {
     VoidCallback? onPressed,
   }) {
     onPressed ??= () {};
-    try {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    } catch (err) {
-      debugPrint('$err');
-    }
     final snackBar = SnackBar(
       content: Text(message),
       action: SnackBarAction(label: label, onPressed: onPressed),
@@ -42,54 +43,135 @@ class _MyAppState extends State<MyApp> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Future _downloadAssets() async {
-    final assetsDownloaded =
-        await downloadAssetsController.assetsDirAlreadyExists();
-    if (assetsDownloaded) {
-      _showMessage(message: 'your assets is Downloaded');
-      return;
-    }
-    try {
-      await downloadAssetsController.startDownload(
-          assetsUrl:
-              "https://github.com/edjostenes/download_assets/raw/master/assets.zip",
-          onProgress: (progressValue) {
-            _showMessage(
-                message: "Downloading - ${progressValue.toStringAsFixed(2)}");
-          },
-          onComplete: () {
-            _showMessage(
-                message:
-                    "Download completed\nClick in refresh button to force download");
-          },
-          onError: (exception) {
-            _showMessage(message: "Error: ${exception.toString()}");
-          });
-    } on DownloadAssetsException catch (e) {
-      _showMessage(message: e.toString());
-    }
-  }
-
   double roationValue = 0.0;
   Vector3 camPos = Vector3.zero();
   late Viewer3DController viewer3dCtl;
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Plugin example app'),
-          ),
-          body: Stack(
+  void refresh() async {
+    await Download.clear();
+    download();
+  }
+
+  void download() async {
+    if (await Download.exisit) {
+      _showMessage(
+        message: 'your assets is Downloaded',
+        label: 'Refresh',
+        onPressed: refresh,
+      );
+      return;
+    }
+    final cancelToken = CancelToken();
+    try {
+      await Download.download(
+        cancelToken: cancelToken,
+        onReceiveProgress: (count, total) {
+          _showMessage(
+            message:
+                "Downloading - ${(100 * count / total).toStringAsFixed(2)}",
+            label: 'Cancel',
+            onPressed: cancelToken.cancel,
+          );
+        },
+      );
+      _showMessage(
+          message:
+              "Download completed\nClick in refresh button to force download");
+    } catch (err) {
+      debugPrint('$err');
+      _showMessage(message: "Download Error: ${err.toString()}");
+      return;
+    }
+    try {
+      await Download.extractToDirectory();
+      _showMessage(
+          message:
+              "Extracting completed\nClick in refresh button to force download");
+    } catch (err) {
+      _showMessage(message: "Extract Error: ${err.toString()}");
+    }
+  }
+
+  void pickFile() async {
+    final list = await Download.assetsDir.then((d) => d.listSync());
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+            title: const Text('Load a file'),
+            // children: dir.listSync().map((file) {
+            //   return ListTile(
+            //     title: Text(path.basename(file.path)),
+            //     subtitle: Text(file.path),
+            //   );
+            // }).toList(),
             children: [
-              Viewer3D(
-                onViewCreated: (ctl) {
-                  viewer3dCtl = ctl;
+              for (final file in list)
+                ListTile(
+                  title: Text(path.basename(file.path)),
+                  subtitle: Text(file.path),
+                  onTap: () async {
+                    try {
+                      await viewer3dCtl.loadModel(Model(path: file.path));
+                      _showMessage(message: 'earth loaded');
+                    } catch (err) {
+                      _showMessage(message: '$err');
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ListTile(
+                title: const Text('load a sphere'),
+                subtitle: const Text('sphere'),
+                onTap: () async {
+                  try {
+                    await viewer3dCtl.loadEarth();
+                    _showMessage(message: 'earth loaded');
+                  } catch (err) {
+                    _showMessage(message: '$err');
+                  }
+                  Navigator.of(context).pop();
                 },
               ),
-              /*
+            ],
+          );
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
+        ),
+        floatingActionButton: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FloatingActionButton(
+              child: const Icon(Icons.refresh),
+              onPressed: () {
+                _showMessage(
+                    message: 'Are you shure you want to refresh',
+                    label: 'Refresh',
+                    onPressed: refresh);
+              },
+            ),
+            const SizedBox(width: 10),
+            FloatingActionButton(
+              child: const Icon(Icons.upload_file),
+              onPressed: pickFile,
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Viewer3D(
+              onViewCreated: (ctl) {
+                viewer3dCtl = ctl;
+              },
+            ),
+            /*
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -176,8 +258,7 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               */
-            ],
-          )),
-    );
+          ],
+        ));
   }
 }

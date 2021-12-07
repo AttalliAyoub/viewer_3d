@@ -11,12 +11,12 @@ extension MyVector3 on Vector3 {
 class Viewer3DController {
   Model? _model;
   Model? get model => _model;
-  set model(Model? m) {
-    _model = m;
-    if (m != null) {
-      _loadFile(m.path);
-    }
-  }
+  // set model(Model? m) {
+  //   _model = m;
+  //   if (m != null) {
+  //     // return loadModel(m);
+  //   }
+  // }
 
   final int id;
   final MethodChannel _channel;
@@ -26,8 +26,14 @@ class Viewer3DController {
   })  : _channel = MethodChannel('viewer_3d$id'),
         _model = model;
 
-  Future<void> _loadFile(String uri) {
-    return _channel.invokeMethod<void>('loadFile', {'uri': uri});
+  Future<void> loadModel(Model model) {
+    _model = model;
+    return _channel.invokeMethod<void>('loadModel', model.json);
+  }
+
+  Future<void> loadEarth() {
+    _model = model;
+    return _channel.invokeMethod<void>('loadEarth');
   }
 
   Future<void> _rotate(Vector3 rotation) {

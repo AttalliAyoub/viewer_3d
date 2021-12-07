@@ -17,7 +17,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  download_assets: ^2.1.0
+  # flutter_archive: ^4.1.0
+  path_provider: ^2.0.7
+  archive: ^3.1.6
+  path: ^1.8.0
+  dio: ^4.0.4
   viewer_3d:
     # When depending on this package from a real application you should use:
     #   viewer_3d: ^x.y.z
